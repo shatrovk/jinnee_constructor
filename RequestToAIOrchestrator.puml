@@ -1,0 +1,55 @@
+@startuml
+autonumber
+
+skinparam sequence {
+	ArrowColor blue
+
+	LifeLineBorderColor blue
+	LifeLineBackgroundColor #A9DCDF
+
+	ParticipantBorderColor blue
+	ParticipantBackgroundColor #A9DCDF
+	ParticipantFontColor black
+
+	ActorBorderColor blue
+	ActorBackgroundColor #A9DCDF
+}
+
+<style>
+	.success * {
+		BackgroundColor #90ee90
+		FontColor Black
+		RoundCorner 10
+	}
+</style>
+
+title Обработка запросов AI-оркестратором
+
+activate User
+User -> Jinnee.ChatApp: Вводит запрос (текстовое сообщение)
+Jinnee.ChatApp -> Jinnee.Orchestrator : Отправляет запрос пользователя
+activate Jinnee.ChatApp
+activate Jinnee.Orchestrator
+Jinnee.Orchestrator -> Jinnee.Orchestrator : Обрабатывает запрос
+Jinnee.Orchestrator -> Constructor.Infra_PostgreSQL: Получение данных о подключенных агентах
+Constructor.Infra_PostgreSQL --> Jinnee.Orchestrator: Список подключенных агентов и их возможности
+Jinnee.Orchestrator -> Constructor.AI : Запрос в AI для декомпозиции запроса\nпользователя на задания для агентов.\nПередача данных:\n- Запрос пользователя\n- Список агентов и их возможности
+Constructor.AI --> Jinnee.Orchestrator : Результаты обработки от AI: список последовательных заданий\nдля Агентов
+
+loop Последовательное выполнение заданий
+    Jinnee.Orchestrator -> Jinnee.Agent : Отправляет запрос с заданием для агента
+    activate Jinnee.Agent
+    Jinnee.Agent -> Jinnee.Agent : Обрабатывает запрос\n(детали см. в схеме "Обработка запросов AI-агентом")
+    Jinnee.Agent --> Jinnee.Orchestrator : Ответ с результатом выполнения
+    deactivate Jinnee.Agent
+
+    Jinnee.Orchestrator -> Jinnee.Orchestrator : Сохраняет в памяти результат ответа от агента 
+    Jinnee.Orchestrator -> Jinnee.Orchestrator : Переходит к следующему заданию
+end
+Jinnee.Orchestrator -> Jinnee.Orchestrator : Формирует итоговый ответ с\nиспользованием данных, полученных от Агентов
+Jinnee.Orchestrator --> Jinnee.ChatApp : Ответ
+Jinnee.ChatApp --> User : Получает сформулированный\nответ на свой запрос
+deactivate Jinnee.Orchestrator
+deactivate Jinnee.ChatApp
+
+@enduml

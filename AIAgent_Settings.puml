@@ -1,0 +1,47 @@
+@startuml
+autonumber
+ 
+skinparam sequence {
+  ArrowColor blue
+ 
+  LifeLineBorderColor blue
+  LifeLineBackgroundColor #A9DCDF
+ 
+  ParticipantBorderColor blue
+  ParticipantBackgroundColor #A9DCDF
+  ParticipantFontColor black
+ 
+  ActorBorderColor blue
+  ActorBackgroundColor #A9DCDF
+}
+
+<style>
+	.success * {
+		BackgroundColor #90ee90
+		FontColor Black
+		RoundCorner 10
+	}
+</style>
+
+title Добавление и настройки AI-агента в визуальном редакторе Constructor
+
+User -> Constructor.VisualEditor: Добавляет компонент Агент
+activate User
+activate Constructor.VisualEditor
+Constructor.VisualEditor --> User: Окно настроек компонента Jinnee.Backend
+User -> Constructor.VisualEditor: Указывает возможности агента
+Constructor.VisualEditor -> Constructor.Backend: Запрос на сохранение настроек
+activate Constructor.Backend
+Constructor.Backend -> Jinnee.Backend: Передача мета-данных компонента с указанными настройками
+activate Jinnee.Backend
+Jinnee.Backend -> Constructor.Infra_PostgreSQL: Сохранение возможностей агента
+activate Constructor.Infra_PostgreSQL
+Constructor.Infra_PostgreSQL --> Jinnee.Backend: Ответ
+deactivate Constructor.Infra_PostgreSQL
+Jinnee.Backend --> Constructor.Backend: Ответ
+deactivate Jinnee.Backend
+Constructor.Backend --> Constructor.VisualEditor: Ответ
+deactivate Constructor.Backend
+Constructor.VisualEditor --> User: Ответ
+
+@enduml

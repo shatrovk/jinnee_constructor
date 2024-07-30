@@ -1,0 +1,44 @@
+@startuml
+autonumber
+
+skinparam sequence {
+ArrowColor blue
+
+LifeLineBorderColor blue
+LifeLineBackgroundColor #A9DCDF
+
+ParticipantBorderColor blue
+ParticipantBackgroundColor #A9DCDF
+ParticipantFontColor black
+
+ActorBorderColor blue
+ActorBackgroundColor #A9DCDF
+}
+
+<style>
+.success * {
+    BackgroundColor #90ee90
+    FontColor Black
+    RoundCorner 10
+}
+</style>
+
+title Обработка запросов Jinnee.RAG-SQL компонентом 
+
+Jinnee.Agent -> Jinnee.RAG : Отправляет запрос в виде текстового сообщения
+activate Jinnee.Agent
+activate Jinnee.RAG
+Jinnee.RAG -> Jinnee.RAG: Формирует промпт к ConstructorAI для формирования SQL запроса
+Jinnee.RAG -> Constructor.AI_SQL : Отправляет промпт для формирования SQL. Данные:\n- запрос пользователя\n- информация о структуре таблиц
+activate Constructor.AI_SQL
+Constructor.AI_SQL --> Jinnee.RAG : Ответ
+deactivate Constructor.AI_SQL
+Jinnee.RAG -> Construtor.Infra_PostgreSQL : Выполняет SQL запрос
+activate Construtor.Infra_PostgreSQL
+Construtor.Infra_PostgreSQL --> Jinnee.RAG : Ответ с данными из БД
+deactivate Construtor.Infra_PostgreSQL
+Jinnee.RAG --> Jinnee.Agent : Ответ
+deactivate Jinnee.RAG
+deactivate Jinnee.Agent
+
+@enduml

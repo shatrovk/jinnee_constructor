@@ -1,0 +1,39 @@
+@startuml
+autonumber
+
+skinparam sequence {
+	ArrowColor blue
+
+	LifeLineBorderColor blue
+	LifeLineBackgroundColor #A9DCDF
+
+	ParticipantBorderColor blue
+	ParticipantBackgroundColor #A9DCDF
+	ParticipantFontColor black
+
+	ActorBorderColor blue
+	ActorBackgroundColor #A9DCDF
+}
+
+<style>
+	.success * {
+		BackgroundColor #90ee90
+		FontColor Black
+		RoundCorner 10
+	}
+</style>
+
+title Обработка запросов AI-агентом
+
+Jinnee.Orchestrator -> Jinnee.Agent : Отправляет запрос в виде текстового сообщения
+activate Jinnee.Orchestrator
+activate Jinnee.Agent
+Jinnee.Agent -> Jinnee.RAG : Отправляет запрос в виде текстового сообщения
+activate Jinnee.RAG
+Jinnee.RAG -> Jinnee.RAG : Обработка запроса (детали см. в схеме "Обработка запросов Jinnee.RAG компонентом")
+Jinnee.RAG --> Jinnee.Agent : Ответ
+deactivate Jinnee.RAG
+Jinnee.Agent --> Jinnee.Orchestrator : Ответ
+deactivate Jinnee.Agent
+deactivate Jinnee.Orchestrator
+@enduml
