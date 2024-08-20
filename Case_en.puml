@@ -1,0 +1,111 @@
+@startuml
+autonumber
+
+skinparam sequence {
+	ArrowColor blue
+
+	LifeLineBorderColor blue
+	LifeLineBackgroundColor #A9DCDF
+
+	ParticipantBorderColor blue
+	ParticipantBackgroundColor #A9DCDF
+	ParticipantFontColor black
+
+	ActorBorderColor blue
+	ActorBackgroundColor #A9DCDF
+}
+
+<style>
+	.request * {
+		BackgroundColor #fcf0ff
+		FontColor Black
+		RoundCorner 10
+	}
+	.success * {
+		BackgroundColor #90ee90
+		FontColor Black
+		RoundCorner 10
+	}
+</style>
+
+title Example of Step-by-Step Request Processing from User
+
+Customer -> UIChatApp: Sends a message
+Note <<request>> right of Customer: "What is the average academic performance and\nattendance of third-year students\nin all subjects for the last semester who have payment dues?"
+activate Customer
+activate UIChatApp
+
+UIChatApp -> AIOrchestrator: Sends request as a text message
+activate AIOrchestrator
+
+AIOrchestrator -> AIOrchestrator: Processes the request and identifies necessary AI agents
+Note right of AIOrchestrator: Available microservices:\n1. Students: Handles data related to:\n1.1. Students - list of students\nNo other data in this microservice\n2. Payments: Handles data related to:\n2.1. Transactions - list of student transactions\nNo other data in this microservice\n3. Performance: Handles data related to:\n3.1. Subjects - list of subjects\n3.2. Marks - list of student grades\nNo other data in this microservice\n4. Attendance: Handles data related to:\n4.1. Subjects - list of subjects\n4.2. Attendance - list of student attendances\nNo other data in this microservice\nRestrictions:\n1. No other microservices available\n2. Cannot create new microservices\n3. Must use only existing microservices\n4. Each microservice works with a specific set of tables\nYou receive a request: “What is the average academic performance and attendance of third-year students in all subjects for the last semester who have payment dues?”\nTask:\nCreate individual tasks to retrieve data from these microservices to form a response.\nDo not spell out the steps.\nProvide response in JSON format.\nIn JSON specify:\n1. Microservice name\n2. Task description\nProvide only technical JSON in response.
+
+activate AIAgent
+Note <<success>> right of AIOrchestrator: [\n{\n"microservice": "Students",\n"task": "Retrieve the list of third-year students"\n},\n{\n"microservice": "Payments",\n"task": "Retrieve the list of transactions of third-year students and determine those with payment dues"\n},\n{\n"microservice": "Performance",\n"task": "Retrieve grades of third-year students in all subjects for the last semester"\n},\n{\n"microservice": "Attendance",\n"task": "Retrieve attendance records of third-year students in all subjects for the last semester"\n}\n]
+
+AIOrchestrator -> AIAgent: Sends requests
+AIAgent -> RAG: Sends request
+activate RAG
+
+RAG -> RAG: Forms SQL query
+Note right of RAG: Write an SQL query in PostgreSQL.\nTable structure:\n1. Students (id, name, course)\nNo other tables available, so do not create new tables. Mention if data cannot be retrieved.\nTask: Retrieve the list of third-year students.\nProvide response only in SQL query format with outputs from all tables.
+
+Note <<success>> right of RAG: SELECT *\nFROM Students\nWHERE course = 3;
+
+RAG -> SQLStorage: Executes query on the database
+activate SQLStorage
+SQLStorage --> RAG: Response
+deactivate SQLStorage
+
+RAG --> AIAgent: Response
+AIAgent --> AIOrchestrator: Response
+
+Note right of RAG: Write an SQL query in PostgreSQL.\nTable structure:\n1. Transactions (id, student_id, amount)\nNo other tables available, so do not create new tables. Mention if data cannot be retrieved.\nTask: Retrieve the list of transactions of third-year students and determine those with payment dues.\nInclude:\n1. JSON from "Students" microservice.\nProvide response only in SQL query format.
+
+Note <<success>> right of RAG: WITH Students AS (\nSELECT * FROM jsonb_to_recordset(\n'[{"id": 1, "name": "Alice", "course": 3},\n{"id": 2, "name": "Bob", "course": 2},\n{"id": 3, "name": "Charlie", "course": 3}]'\n) AS s(id INT, name TEXT, course INT)\n)\nSELECT t.id AS transaction_id, t.student_id, t.amount, s.name, s.course\nFROM Transactions t\nJOIN Students s ON t.student_id = s.id\nWHERE s.course = 3;
+
+RAG -> SQLStorage: Executes query on the database
+activate SQLStorage
+SQLStorage --> RAG: Response
+deactivate SQLStorage
+
+RAG --> AIAgent: Response
+AIAgent --> AIOrchestrator: Response
+
+Note right of RAG: Write an SQL query in PostgreSQL.\nTable structure:\n1. Subjects (id, subject_name)\n2. Marks (student_id, subject_id, semester, mark)\nNo other tables available, so do not create new tables. Mention if data cannot be retrieved.\nTask: Retrieve grades of third-year students in all subjects for the last semester.\nInclude:\n1. JSON from "Students" microservice;\n2. JSON from "Payments" microservice.\nProvide response only in SQL query format.
+
+Note <<success>> right of RAG: WITH Students AS (\nSELECT * FROM jsonb_to_recordset(\n'[{"id": 1, "name": "Alice", "course": 3},\n{"id": 2, "name": "Bob", "course": 2},\n{"id": 3, "name": "Charlie", "course": 3}]'\n) AS s(id INT, name TEXT, course INT)\n),\nLastSemester AS (\nSELECT MAX(semester) AS last_semester\nFROM Marks\n)\nSELECT m.student_id, s.name, m.subject_id, sub.subject_name, m.semester, m.mark\nFROM Marks m\nJOIN LastSemester ls ON m.semester = ls.last_semester\nJOIN Students s ON m.student_id = s.id\nJOIN Subjects sub ON m.subject_id = sub.id\nWHERE s.course = 3;
+
+RAG -> SQLStorage: Executes query on the database
+activate SQLStorage
+SQLStorage --> RAG: Response
+deactivate SQLStorage
+
+RAG --> AIAgent: Response
+AIAgent --> AIOrchestrator: Response
+
+Note right of RAG: Write an SQL query in PostgreSQL.\nTable structure:\n1. Subjects (id, subject_name)\n2. Attendance (student_id, subject_id, semester, attendance_status)\nNo other tables available, so do not create new tables. Mention if data cannot be retrieved.\nTask: Retrieve attendance records of third-year students in all subjects for the last semester.\nInclude:\n1. JSON from "Students" microservice;\n2. JSON from "Payments" microservice;\n3. JSON from "Performance" microservice.\nProvide response only in SQL query format.
+
+Note <<success>> right of RAG: WITH Students AS (\nSELECT * FROM jsonb_to_recordset(\n'[{"id": 1, "name": "Alice", "course": 3},\n{"id": 2, "name": "Bob", "course": 2},\n{"id": 3, "name": "Charlie", "course": 3}]'\n) AS s(id INT, name TEXT, course INT)\n),\nLastSemester AS (\nSELECT MAX(semester) AS last_semester\nFROM Attendance\n)\nSELECT a.student_id, s.name, a.subject_id, sub.subject_name, a.semester, a.attendance_status\nFROM Attendance a\nJOIN LastSemester ls ON a.semester = ls.last_semester\nJOIN Students s ON a.student_id = s.id\nJOIN Subjects sub ON a.subject_id = sub.id\nWHERE s.course = 3;
+
+RAG -> SQLStorage: Executes query on the database
+activate SQLStorage
+SQLStorage --> RAG: Response
+deactivate SQLStorage
+
+RAG --> AIAgent: Response
+AIAgent --> AIOrchestrator: Response
+AIOrchestrator -> AIOrchestrator: Forms the final response
+
+Note right of AIOrchestrator: 1. Students: /* Here are results from the "Students" microservice in JSON format */\n2. Payments: /* Here are results from the "Payments" microservice in JSON format */\n3. Performance: /* Here are results from the "Performance" microservice in JSON format */\n4. Attendance: /* Here are results from the "Attendance" microservice in JSON format */\nForm the final response to the user without extra details to the question:\n“What is the average academic performance and attendance of third-year students in all subjects for the last semester who have payment dues?”\nProvide response in text format.
+
+Note <<request>> right of Customer: The average academic performance of third-year students in all subjects\nfor the last semester who have payment dues is X.XX,\nand the average attendance is Y.YY%.
+
+AIOrchestrator --> UIChatApp: Response
+deactivate AIOrchestrator
+UIChatApp --> Customer: Response
+deactivate UIChatApp
+deactivate Customer
+
+@enduml

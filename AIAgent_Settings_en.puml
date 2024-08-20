@@ -1,0 +1,46 @@
+@startuml
+autonumber
+ 
+skinparam sequence {
+  ArrowColor blue
+ 
+  LifeLineBorderColor blue
+  LifeLineBackgroundColor #A9DCDF
+ 
+  ParticipantBorderColor blue
+  ParticipantBackgroundColor #A9DCDF
+  ParticipantFontColor black
+ 
+  ActorBorderColor blue
+  ActorBackgroundColor #A9DCDF
+}
+
+<style>
+	.success * {
+		BackgroundColor #90ee90
+		FontColor Black
+		RoundCorner 10
+	}
+</style>
+
+title Adding and Configuring AI-Agent in the Visual Editor Constructor
+User -> Constructor.VisualEditor: Adds Agent component
+activate User
+activate Constructor.VisualEditor
+Constructor.VisualEditor --> User: Opens settings window for Jinnee.Backend component
+User -> Constructor.VisualEditor: Specifies agent capabilities
+Constructor.VisualEditor -> Constructor.Backend: Requests to save settings
+activate Constructor.Backend
+Constructor.Backend -> Jinnee.Backend: Sends component metadata with specified settings
+activate Jinnee.Backend
+Jinnee.Backend -> Constructor.Infra_PostgreSQL: Saves agent capabilities
+activate Constructor.Infra_PostgreSQL
+Constructor.Infra_PostgreSQL --> Jinnee.Backend: Response
+deactivate Constructor.Infra_PostgreSQL
+Jinnee.Backend --> Constructor.Backend: Response
+deactivate Jinnee.Backend
+Constructor.Backend --> Constructor.VisualEditor: Response
+deactivate Constructor.Backend
+Constructor.VisualEditor --> User: Response
+
+@enduml

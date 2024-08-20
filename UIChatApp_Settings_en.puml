@@ -1,0 +1,54 @@
+@startuml
+autonumber
+
+skinparam sequence {
+	ArrowColor blue
+
+	LifeLineBorderColor blue
+	LifeLineBackgroundColor #A9DCDF
+
+	ParticipantBorderColor blue
+	ParticipantBackgroundColor #A9DCDF
+	ParticipantFontColor black
+
+	ActorBorderColor blue
+	ActorBackgroundColor #A9DCDF
+}
+
+<style>
+	.success * {
+		BackgroundColor #90ee90
+		FontColor Black
+		RoundCorner 10
+	}
+</style>
+
+title Adding and Configuring UI ChatApp in the Visual Editor Constructor
+
+User -> Constructor.VisualEditor : Adds UI ChatApp component
+activate User
+activate Constructor.VisualEditor
+
+Constructor.VisualEditor --> User : Displays UI ChatApp settings window
+
+User -> Constructor.VisualEditor : Configures and saves settings for UI ChatApp
+
+Constructor.VisualEditor -> Constructor.Backend : Request to add component and save UI ChatApp settings
+activate Constructor.Backend
+
+Constructor.Backend -> Jinnee.Backend : Transfers specified settings
+
+Jinnee.Backend -> Constructor.Infra_PostgreSQL : Saves settings in the database
+
+Constructor.Infra_PostgreSQL --> Jinnee.Backend:
+
+Jinnee.Backend --> Constructor.Backend : Response
+
+Constructor.Backend --> Constructor.VisualEditor : Response
+
+Constructor.VisualEditor --> User : Response
+deactivate Constructor.Backend
+deactivate Constructor.VisualEditor
+deactivate User
+
+@enduml

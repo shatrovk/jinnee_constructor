@@ -1,0 +1,43 @@
+@startuml
+autonumber
+
+skinparam sequence {
+ArrowColor blue
+
+LifeLineBorderColor blue
+LifeLineBackgroundColor #A9DCDF
+
+ParticipantBorderColor blue
+ParticipantBackgroundColor #A9DCDF
+ParticipantFontColor black
+
+ActorBorderColor blue
+ActorBackgroundColor #A9DCDF
+}
+
+<style>
+.success * {
+    BackgroundColor #90ee90
+    FontColor Black
+    RoundCorner 10
+}
+</style>
+
+title Processing Requests by the Jinnee.RAG-SQL component
+Jinnee.Agent -> Jinnee.RAG: Sends a request in the form of a text message
+activate Jinnee.Agent
+activate Jinnee.RAG
+Jinnee.RAG -> Jinnee.RAG: Forms a prompt to ConstructorAI to create an SQL query
+Jinnee.RAG -> Constructor.AI_SQL: Sends the prompt to create SQL. Data:\n- User request\n- Information about table structure
+activate Constructor.AI_SQL
+Constructor.AI_SQL --> Jinnee.RAG: Response
+deactivate Constructor.AI_SQL
+Jinnee.RAG -> Construtor.Infra_PostgreSQL: Executes the SQL query
+activate Construtor.Infra_PostgreSQL
+Construtor.Infra_PostgreSQL --> Jinnee.RAG: Response with data from the database
+deactivate Construtor.Infra_PostgreSQL
+Jinnee.RAG --> Jinnee.Agent: Response
+deactivate Jinnee.RAG
+deactivate Jinnee.Agent
+
+@enduml

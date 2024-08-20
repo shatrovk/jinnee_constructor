@@ -1,0 +1,52 @@
+@startuml
+autonumber
+
+skinparam sequence {
+	ArrowColor blue
+
+	LifeLineBorderColor blue
+	LifeLineBackgroundColor #A9DCDF
+
+	ParticipantBorderColor blue
+	ParticipantBackgroundColor #A9DCDF
+	ParticipantFontColor black
+
+	ActorBorderColor blue
+	ActorBackgroundColor #A9DCDF
+}
+
+<style>
+	.success * {
+		BackgroundColor #90ee90
+		FontColor Black
+		RoundCorner 10
+	}
+</style>
+
+title Handling Requests with AI Orchestrator
+activate User
+User -> Jinnee.ChatApp: Inputs a request (text message)
+Jinnee.ChatApp -> Jinnee.Orchestrator: Sends user request
+activate Jinnee.ChatApp
+activate Jinnee.Orchestrator
+Jinnee.Orchestrator -> Jinnee.Orchestrator: Processes the request
+Jinnee.Orchestrator -> Constructor.Infra_PostgreSQL: Fetches data on connected agents
+Constructor.Infra_PostgreSQL --> Jinnee.Orchestrator: List of connected agents and their capabilities
+Jinnee.Orchestrator -> Constructor.AI: Sends request to AI to decompose user's request into tasks for agents. Data sent: - User's request - List of agents and their capabilities
+Constructor.AI --> Jinnee.Orchestrator: Processing results from AI: list of sequential tasks for Agents
+loop Sequential task execution
+ Jinnee.Orchestrator -> Jinnee.Agent: Sends request with a task to the agent
+ activate Jinnee.Agent
+ Jinnee.Agent -> Jinnee.Agent: Processes the request (for details, see "AI Agent Request Processing" diagram)
+ Jinnee.Agent --> Jinnee.Orchestrator: Response with the result of execution
+ deactivate Jinnee.Agent
+ Jinnee.Orchestrator -> Jinnee.Orchestrator: Stores the result from agent's response in memory
+ Jinnee.Orchestrator -> Jinnee.Orchestrator: Moves on to the next task
+end
+Jinnee.Orchestrator -> Jinnee.Orchestrator: Forms the final response using data obtained from Agents
+Jinnee.Orchestrator --> Jinnee.ChatApp: Response
+Jinnee.ChatApp --> User: Receives formulated response to the request
+deactivate Jinnee.Orchestrator
+deactivate Jinnee.ChatApp
+
+@enduml
